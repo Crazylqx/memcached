@@ -62,6 +62,9 @@
 #include <sys/sysctl.h>
 #endif
 
+#include "profile.h"
+
+
 /*
  * forward declarations
  */
@@ -2978,6 +2981,8 @@ static void drive_machine(conn *c) {
 
     while (!stop) {
 
+        START_PROFILE(c->state);
+
         switch(c->state) {
         case conn_listening:
             addrlen = sizeof(addr);
@@ -3384,6 +3389,8 @@ static void drive_machine(conn *c) {
             assert(false);
             break;
         }
+    
+        END_RPOFILE;
     }
 
     return;
@@ -4788,6 +4795,10 @@ int main (int argc, char **argv) {
     // struct for restart code. Initialized up here so we can curry
     // important settings to save or validate.
     struct _mc_meta_data *meta = malloc(sizeof(struct _mc_meta_data));
+
+
+    init_hdr_histogram();
+
     meta->slab_config = NULL;
     char *subopts, *subopts_orig;
     char *subopts_value;
@@ -6290,6 +6301,10 @@ int main (int argc, char **argv) {
     event_base_free(main_base);
 
     free(meta);
+
+    profile_output();
+    close_hdr_histogram();
+    puts("Bye!");
 
     return retval;
 }
